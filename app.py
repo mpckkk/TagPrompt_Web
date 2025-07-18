@@ -7,10 +7,16 @@ from nltk.stem import PorterStemmer, LancasterStemmer, WordNetLemmatizer
 from nltk.corpus import stopwords
 import io
 
-# Download NLTK resources
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# Create a local nltk_data folder in the working directory
+nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
+
+# Only download if not present
+nltk.download("punkt", download_dir=nltk_data_path)
+nltk.download("stopwords", download_dir=nltk_data_path)
+nltk.download("wordnet", download_dir=nltk_data_path)
+
+# Ensure nltk looks in the right place
+nltk.data.path.append(nltk_data_path)
 
 # Initialize stemmers and lemmatizer
 port = PorterStemmer()
