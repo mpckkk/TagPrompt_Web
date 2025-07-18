@@ -11,7 +11,7 @@ from nltk.stem import PorterStemmer, LancasterStemmer, WordNetLemmatizer
 from nltk.corpus import stopwords
 from nltk.tokenize import TreebankWordTokenizer
 
-# ========== NLTK + spaCy Setup ==========
+# ========== NLTK Setup ==========
 nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
 os.makedirs(nltk_data_path, exist_ok=True)
 nltk.data.path.append(nltk_data_path)
@@ -25,16 +25,17 @@ def safe_download(resource, path=nltk_data_path):
 for resource in ["punkt", "stopwords", "wordnet"]:
     safe_download(resource)
 
+# ========== spaCy Setup ==========
 try:
     nlp = spacy.load("en_core_web_sm")
-except:
+except OSError:
     from spacy.cli import download
     download("en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
 tokenizer = TreebankWordTokenizer()
 
-# ========== NLP Processing ==========
+# ========== Text Processing ==========
 def process_text(text, method, lang="english"):
     freq_dict = defaultdict(int)
     port, lanc, wnl = PorterStemmer(), LancasterStemmer(), WordNetLemmatizer()
@@ -61,7 +62,7 @@ def process_text(text, method, lang="english"):
 
     return pd.DataFrame(freq_dict.items(), columns=["Word", "Frequency"]).sort_values(by="Frequency", ascending=False)
 
-# ========== Visualization ==========
+# ========== Visualizations ==========
 def generate_bar_plot(df, top_n):
     fig, ax = plt.subplots(figsize=(10, 5))
     df_top = df.head(top_n)
@@ -116,7 +117,6 @@ method = st.selectbox("Select Processing Method", [
 ])
 
 lang_choice = st.selectbox("Stopword Language", options=stopwords.fileids())
-
 top_n = st.slider("Top N most frequent words to display:", min_value=5, max_value=50, value=15)
 
 if st.button("🔍 Analyze") and input_text.strip():
@@ -135,19 +135,19 @@ if st.button("🔍 Analyze") and input_text.strip():
     csv = df.to_csv(index=False).encode("utf-8")
     st.download_button("📥 Download CSV", data=csv, file_name=f"{method}_output.csv", mime="text/csv")
 
-    # Bar plot PNG download
+    # Bar plot download
     img_bytes = BytesIO()
     bar_fig.savefig(img_bytes, format='png')
     img_bytes.seek(0)
-    st.download_button("📷 Download Bar Plot", data=img_bytes, file_name="bar_plot.png", mime="image/png")
+    st.download_button("📊 Download Bar Plot", data=img_bytes, file_name="bar_plot.png", mime="image/png")
 
-    # Word cloud PNG download
+    # Word cloud download
     img_bytes_wc = BytesIO()
     wc_fig.savefig(img_bytes_wc, format='png')
     img_bytes_wc.seek(0)
     st.download_button("🌥 Download Word Cloud", data=img_bytes_wc, file_name="wordcloud.png", mime="image/png")
 
-    # Named Entity Recognition
+    # NER
     with st.expander("🧠 Named Entity Recognition (NER)"):
         ner_df = extract_entities(input_text)
         if not ner_df.empty:
