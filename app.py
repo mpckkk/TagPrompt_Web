@@ -5,19 +5,25 @@ import pandas as pd
 from collections import defaultdict
 from nltk.stem import PorterStemmer, LancasterStemmer, WordNetLemmatizer
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import TreebankWordTokenizer
 
 # ========== Setup NLTK for Streamlit Cloud ==========
 nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
 os.makedirs(nltk_data_path, exist_ok=True)
 nltk.data.path.append(nltk_data_path)
 
-# Download required resources only if missing
-for resource in ["punkt", "stopwords", "wordnet"]:
+def safe_download(resource, path=nltk_data_path):
     try:
         nltk.data.find(f"tokenizers/{resource}" if resource == "punkt" else f"corpora/{resource}")
     except LookupError:
-        nltk.download(resource, download_dir=nltk_data_path)
+        nltk.download(resource, download_dir=path)
+
+# Download only valid and necessary NLTK corpora/tokenizers
+for resource in ["punkt", "stopwords", "wordnet"]:
+    safe_download(resource)
+
+# Use Treebank tokenizer to avoid sent_tokenize entirely
+tokenizer = TreebankWordTokenizer()
 
 # ========== NLP Processing Function ==========
 def process_text(text, method):
@@ -29,7 +35,7 @@ def process_text(text, method):
     wnl = WordNetLemmatizer()
 
     for line in lines:
-        tokens = word_tokenize(line.strip())
+        tokens = tokenizer.tokenize(line.strip())
         tokens = [word.lower() for word in tokens if word.isalnum()]
         tokens = [word for word in tokens if word not in stopwords.words("english")]
 
